@@ -240,6 +240,7 @@ static void setgaps(int oh, int ov, int ih, int iv);
 static void incrgaps(const Arg *arg);
 static void incrigaps(const Arg *arg);
 static void incrogaps(const Arg *arg);
+static void view_adjacent(const Arg *arg);
 static void incrohgaps(const Arg *arg);
 static void incrovgaps(const Arg *arg);
 static void incrihgaps(const Arg *arg);
@@ -1343,6 +1344,25 @@ Monitor *recttomon(int x, int y, int w, int h) {
     return r;
 }
 
+void view_adjacent(const Arg *arg) {
+    int i, curtags;
+    int seltag = 0;
+    Arg a;
+
+    curtags = selmon->tagset[selmon->seltags];
+    for (i = 0; i < LENGTH(tags); i++)
+        if (curtags & (1 << i)) {
+            seltag = i;
+            break;
+        }
+
+    seltag = (seltag + arg->i) % (int)LENGTH(tags);
+    if (seltag < 0) seltag += LENGTH(tags);
+
+    a.i = (1 << seltag);
+    view(&a);
+}
+
 void resize(Client *c, int x, int y, int w, int h, int interact) {
     if (applysizehints(c, &x, &y, &w, &h, interact))
         resizeclient(c, x, y, w, h);
@@ -1374,7 +1394,8 @@ void resizemouse(const Arg *arg) {
     Time lasttime = 0;
 
     if (!(c = selmon->sel)) return;
-    if (c->isfullscreen) /* no support resizing fullscreen windows by mouse */
+    if (c->isfullscreen) /* no support resizing fullscreen windows by mouse
+                          */
         return;
     restack(selmon);
     ocx = c->x;
@@ -2186,9 +2207,9 @@ Monitor *wintomon(Window w) {
     return selmon;
 }
 
-/* There's no way to check accesses to destroyed windows, thus those cases are
- * ignored (especially on UnmapNotify's). Other types of errors call Xlibs
- * default error handler, which may call exit. */
+/* There's no way to check accesses to destroyed windows, thus those cases
+ * are ignored (especially on UnmapNotify's). Other types of errors call
+ * Xlibs default error handler, which may call exit. */
 int xerror(Display *dpy, XErrorEvent *ee) {
     if (ee->error_code == BadWindow ||
         (ee->request_code == X_SetInputFocus && ee->error_code == BadMatch) ||
